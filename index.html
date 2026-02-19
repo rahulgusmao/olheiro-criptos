@@ -259,6 +259,17 @@
         tg.expand();
         tg.ready();
 
+        // SEGURANÇA: Bloqueia acesso se não for você
+        const user = tg.initDataUnsafe?.user;
+        if (!user || user.username !== 'rahulgusmao') {
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px;">
+                    <h2 style="color:var(--danger)">⛔ ACESSO RESTRITO</h2>
+                    <p style="color:var(--text-dim); margin-top:10px;">Este painel é de uso exclusivo do administrador.</p>
+                </div>`;
+            setTimeout(() => tg.close(), 3000);
+        }
+
         tg.MainButton.setText("CONFIRMAR ALTERAÇÕES");
         tg.MainButton.hide();
 
