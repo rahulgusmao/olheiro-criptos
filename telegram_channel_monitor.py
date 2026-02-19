@@ -5,6 +5,7 @@ import asyncio
 import requests
 import psutil
 import sys
+import subprocess
 from telethon import TelegramClient, events
 from dotenv import load_dotenv
 
@@ -83,10 +84,39 @@ def save_config(config):
     try:
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=4, ensure_ascii=False)
+        
+        # Se estiver no GitHub Actions, tenta fazer o push das alterações
+        if os.getenv("GITHUB_ACTIONS") == "true":
+            push_to_github()
+            
         return True
     except Exception as e:
         logger.error(f"Erro ao salvar config: {e}")
         return False
+
+def push_to_github():
+    """Faz commit e push do arquivo de configuração para o repositório"""
+    try:
+        logger.info("📤 Sincronizando alterações com o GitHub...")
+        
+        # Configura usuário do Git (necessário para o commit)
+        subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=True)
+        subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], check=True)
+        
+        # Adiciona, commit e push
+        subprocess.run(["git", "add", "monitor_config.json"], check=True)
+        
+        # Verifica se há algo para commitar para evitar erro
+        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout
+        if "monitor_config.json" in status:
+            subprocess.run(["git", "commit", "-m", "🔄 Configuração atualizada via Bot [auto-save]"], check=True)
+            subprocess.run(["git", "push"], check=True)
+            logger.info("✅ Configuração persistida no GitHub com sucesso!")
+        else:
+            logger.info("ℹ️ Nenhuma alteração pendente na configuração.")
+            
+    except Exception as e:
+        logger.error(f"❌ Falha ao sincronizar com GitHub: {e}")
 
 def send_via_bot(text):
     """Envia mensagem usando o Bot de Alerta via HTTP API"""
