@@ -31,15 +31,18 @@ SESSION_BASE64 = os.getenv("TELEGRAM_SESSION_BASE64")
 # Setup paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, "monitor_config.json")
-SESSION_FILE = os.path.join(BASE_DIR, "monitor_session.session")
+SESSION_NAME = "monitor_session"
+SESSION_FILE = os.path.join(BASE_DIR, f"{SESSION_NAME}.session")
 LOCK_FILE = os.path.join(BASE_DIR, "monitor_bot.lock")
 
 # Se estiver no GitHub Actions, restaura o arquivo de sessão
 if SESSION_BASE64 and not os.path.exists(SESSION_FILE):
     try:
+        # Remove espaços e quebras de linha que possam ter vindo do copiar/colar
+        clean_base64 = "".join(SESSION_BASE64.split())
         with open(SESSION_FILE, "wb") as f:
-            f.write(base64.b64decode(SESSION_BASE64))
-        logging.info("Sessão restaurada a partir da variável de ambiente.")
+            f.write(base64.b64decode(clean_base64))
+        logging.info(f"Sessão restaurada com sucesso em {SESSION_FILE}")
     except Exception as e:
         logging.error(f"Erro ao restaurar sessão: {e}")
 
@@ -246,7 +249,7 @@ async def main():
                 config = load_config()
                 logger.info("Iniciando cliente Telegram (User Bot)...")
                 
-                client = TelegramClient(SESSION_FILE, int(API_ID), API_HASH)
+                client = TelegramClient(SESSION_NAME, int(API_ID), API_HASH)
                 
                 @client.on(events.NewMessage(chats=config.get("monitored_channels", [])))
                 async def handler(event):
