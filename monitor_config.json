@@ -1,0 +1,49 @@
+{
+    "monitored_channels": [
+        "Encryptos Smart Money"
+    ],
+    "keywords": [
+        "ASTERUSDT.P",
+        "BEATUSDT.P",
+        "BTCUSDT.P",
+        "CLANKERUSDT.P",
+        "ENAUSDT.P",
+        "FOLKSUSDT.P",
+        "GIGGLEUSDT.P",
+        "GWEIUSDT.P",
+        "INITUSDT.P",
+        "IRUSDT.P",
+        "JASMYUSDT.P",
+        "JCTUSDT.P",
+        "KAIAUSDT.P",
+        "KITEUSDT.P",
+        "LISTAUSDT.P",
+        "LUMIAUSDT.P",
+        "MERLUSDT.P",
+        "MLNUSDT.P",
+        "MTLUSDT.P",
+        "NEOUSDT.P",
+        "NILUSDT.P",
+        "NOTUSDT.P",
+        "PEAQUSDT.P",
+        "PIPPINUSDT.P",
+        "POWERUSDT.P",
+        "QUSDT.P",
+        "RAVEUSDT.P",
+        "RECALLUSDT.P",
+        "SAHARAUSDT.P",
+        "SQDUSDT.P",
+        "TURBOUSDT.P",
+        "VANAUSDT.P",
+        "XPINUSDT.P",
+        "XPLUSUSDT.P",
+        "WLFIUSDT.P",
+        "ZKPUSDT.P",
+        "Smart Money Level\n🔸🔸🔸",
+        "OI 1h",
+        "OI 5m"
+    ],
+    "excluded_keywords": [
+        "RSI"
+    ]
+}
