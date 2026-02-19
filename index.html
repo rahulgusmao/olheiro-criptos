@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,18 +11,20 @@
         :root {
             --bg-dark: #0f1218;
             --card-bg: #1a1f29;
-            --accent: #f7931a; /* Bitcoin Orange */
+            --accent: #f7931a;
+            /* Bitcoin Orange */
             --accent-glow: rgba(247, 147, 26, 0.3);
             --text: #ffffff;
             --text-dim: #94a3b8;
             --danger: #ef4444;
             --success: #22c55e;
+            --info: #3b82f6;
         }
 
         * {
             margin: 0;
             padding: 0;
-            box-box-sizing: border-box;
+            box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -31,6 +34,8 @@
             color: var(--text);
             overflow-x: hidden;
             padding: 16px;
+            padding-bottom: 100px;
+            /* Espaço para o botão do Telegram */
         }
 
         .header {
@@ -38,7 +43,6 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 24px;
-            animation: fadeIn 0.8s ease-out;
         }
 
         .logo-area {
@@ -62,32 +66,11 @@
         .title h1 {
             font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
         }
 
         .title p {
             font-size: 0.8rem;
             color: var(--text-dim);
-        }
-
-        .status-badge {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--success);
         }
 
         /* Card Setup */
@@ -97,8 +80,7 @@
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             margin-bottom: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            animation: slideUp 0.6s ease-out;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         .card-title {
@@ -114,162 +96,175 @@
         }
 
         /* Input Area */
-        .input-group {
+        .actions-grid {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
         }
 
         input {
             flex: 1;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 12px 16px;
+            padding: 12px 14px;
             border-radius: 12px;
             color: var(--text);
             font-family: inherit;
             outline: none;
-            transition: 0.3s;
+            font-size: 0.95rem;
         }
 
         input:focus {
             border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 15px rgba(247, 147, 26, 0.1);
+        }
+
+        .btn {
+            border: none;
+            padding: 0 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
         }
 
         .btn-add {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0 20px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-add:active {
-            transform: scale(0.95);
-        }
-
-        /* Token List */
-        .token-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-
-        .token-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 12px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: 0.2s;
-        }
-
-        .token-item:hover {
-            border-color: rgba(247, 147, 26, 0.3);
-        }
-
-        .token-name {
-            font-weight: 600;
-            font-size: 0.9rem;
+            background: var(--success);
+            color: white;
         }
 
         .btn-remove {
-            color: var(--danger);
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            opacity: 0.6;
-            transition: 0.2s;
+            background: var(--danger);
+            color: white;
         }
 
-        .btn-remove:hover {
-            opacity: 1;
-            transform: scale(1.1);
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Chips / List */
+        .token-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: fadeIn 0.3s ease-out;
+            color: var(--accent);
+        }
+
+        .chip.new {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .chip.removed {
+            border-color: var(--danger);
+            color: var(--danger);
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .chip-close {
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+
+        .section-info {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-dim);
+            font-style: italic;
+            font-size: 0.85rem;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-
-        .footer {
-            text-align: center;
+        .badge-count {
+            background: var(--accent);
+            color: white;
             font-size: 0.7rem;
-            color: var(--text-dim);
-            margin-top: 20px;
-            padding-bottom: 20px;
-        }
-
-        .pulse {
-            animation: pulse-ring 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
-        }
-
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-left: auto;
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div class="logo-area">
             <div class="logo-icon">🔭</div>
             <div class="title">
                 <h1>Olheiro Cripto</h1>
-                <p>Monitoramento 24h</p>
+                <p>Gestão de Monitoramento</p>
             </div>
         </div>
-        <div class="status-badge">
-            <div class="status-dot"></div>
-            Ativo
-        </div>
     </div>
 
+    <!-- CARD AÇÕES -->
     <div class="card">
-        <div class="card-title">🚀 Adicionar Token</div>
-        <div class="input-group">
-            <input type="text" id="tokenInput" placeholder="Ex: SOLUSDT.P" autocomplete="off">
-            <button class="btn-add" onclick="addToken()">ADD</button>
+        <div class="card-title">⚙️ Ações Rápidas</div>
+        <div class="actions-grid">
+            <span class="section-info">Digite o token ou palavra para adicionar ou remover da lista:</span>
+            <div class="input-row">
+                <input type="text" id="tokenInput" placeholder="Ex: BTCUSDT.P ou RSI" autocomplete="off">
+            </div>
+            <div class="input-row" style="margin-top: 5px;">
+                <button class="btn btn-add" style="flex: 1;" onclick="queueAction('add')">➕ INSERIR</button>
+                <button class="btn btn-remove" style="flex: 1;" onclick="queueAction('remove')">➖ REMOVER</button>
+            </div>
         </div>
     </div>
 
+    <!-- CARD LISTA ATUAL -->
     <div class="card">
-        <div class="card-title">📋 Monitorando Agora</div>
-        <div class="token-grid" id="tokenList">
-            <!-- Tokens aparecerão aqui -->
+        <div class="card-title">
+            📋 Em Monitoramento
+            <span id="countBadge" class="badge-count">0</span>
         </div>
-    </div>
-
-    <div class="footer">
-        Olheiro das Criptos v2.0 • GitHub Actions Active
+        <span class="section-info">As alterações abaixos serão enviadas ao confirmar no botão do Telegram:</span>
+        <div id="tokenGrid" class="token-container">
+            <div class="empty-state">Clique em "Inserir" ou "Remover" para começar...</div>
+        </div>
     </div>
 
     <script>
@@ -277,65 +272,94 @@
         tg.expand();
         tg.ready();
 
-        // Estiliza o botão principal do Telegram
-        tg.MainButton.setText("SALVAR ALTERAÇÕES");
+        tg.MainButton.setText("SALVAR NO MONITORAMENTO");
         tg.MainButton.hide();
 
-        let currentTokens = [];
+        // Lista de operações pendentes
+        let pendingChanges = {
+            add: [],
+            remove: []
+        };
 
-        // Simulação de carregamento inicial (no futuro buscaremos direto do robô)
-        // Por enquanto, o usuário adiciona o que quer enviar
-        function renderTokens() {
-            const list = document.getElementById('tokenList');
-            list.innerHTML = '';
-            currentTokens.forEach((token, index) => {
-                const item = document.createElement('div');
-                item.className = 'token-item';
-                item.innerHTML = `
-                    <span class="token-name">${token}</span>
-                    <button class="btn-remove" onclick="removeToken(${index})">✕</button>
+        function render() {
+            const grid = document.getElementById('tokenGrid');
+            grid.innerHTML = '';
+
+            const allActions = [
+                ...pendingChanges.add.map(t => ({ name: t, type: 'new' })),
+                ...pendingChanges.remove.map(t => ({ name: t, type: 'removed' }))
+            ];
+
+            if (allActions.length === 0) {
+                grid.innerHTML = '<div class="empty-state">Nenhuma alteração pendente...</div>';
+                tg.MainButton.hide();
+                document.getElementById('countBadge').innerText = "0";
+                return;
+            }
+
+            allActions.forEach((item, index) => {
+                const chip = document.createElement('div');
+                chip.className = `chip ${item.type}`;
+                chip.innerHTML = `
+                    <span>${item.name}</span>
+                    <span class="chip-close" onclick="cancelAction('${item.type}', '${item.name}')">✕</span>
                 `;
-                list.appendChild(item);
+                grid.appendChild(chip);
             });
 
-            if (currentTokens.length > 0) {
-                tg.MainButton.show();
-            } else {
-                tg.MainButton.hide();
-            }
+            document.getElementById('countBadge').innerText = allActions.length;
+            tg.MainButton.show();
         }
 
-        function addToken() {
+        function queueAction(type) {
             const input = document.getElementById('tokenInput');
-            const token = input.value.trim().toUpperCase();
-            if (token && !currentTokens.includes(token)) {
-                currentTokens.push(token);
-                input.value = '';
-                renderTokens();
-                tg.HapticFeedback.impactOccurred('medium');
+            const value = input.value.trim().toUpperCase();
+
+            if (!value) return;
+
+            // Evita duplicatas na mesma fila
+            if (type === 'add' && !pendingChanges.add.includes(value)) {
+                // Se estava pra remover, cancela a remoção em vez de adicionar
+                if (pendingChanges.remove.includes(value)) {
+                    cancelAction('remove', value);
+                } else {
+                    pendingChanges.add.push(value);
+                }
+            } else if (type === 'remove' && !pendingChanges.remove.includes(value)) {
+                // Se estava pra adicionar, cancela a adição em vez de remover
+                if (pendingChanges.add.includes(value)) {
+                    cancelAction('add', value);
+                } else {
+                    pendingChanges.remove.push(value);
+                }
             }
+
+            input.value = '';
+            render();
+            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function removeToken(index) {
-            currentTokens.splice(index, 1);
-            renderTokens();
-            tg.HapticFeedback.notificationOccurred('success');
+        function cancelAction(type, name) {
+            const list = type === 'new' ? pendingChanges.add : pendingChanges.remove;
+            const tKey = type === 'new' ? 'add' : 'remove';
+            pendingChanges[tKey] = pendingChanges[tKey].filter(i => i !== name);
+            render();
         }
 
-        // Quando o usuário clica no botão grande do Telegram
-        tg.onEvent('mainButtonClicked', function() {
+        tg.onEvent('mainButtonClicked', function () {
             const data = {
-                action: 'update_tokens',
-                tokens: currentTokens
+                action: 'sync_config',
+                add: pendingChanges.add,
+                remove: pendingChanges.remove
             };
-            // Envia os dados para o Bot
             tg.sendData(JSON.stringify(data));
             tg.close();
         });
 
-        // Adapta cores ao tema do Telegram
+        // Cores do tema do Telegram
         document.documentElement.style.setProperty('--bg-dark', tg.themeParams.bg_color || '#0f1218');
-        document.documentElement.style.setProperty('--text', tg.themeParams.text_color || '#ffffff');
+        document.documentElement.style.setProperty('--card-bg', tg.themeParams.secondary_bg_color || '#1a1f29');
     </script>
 </body>
+
 </html>

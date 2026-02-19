@@ -244,6 +244,55 @@ async def bot_command_handler():
         
         await asyncio.sleep(1)
 
+# Variável global para armazenar o client e facilitar acesso em handlers externos
+client_instance = None
+
+async def on_web_app_data(event):
+    """Recebe dados enviados pelo Mini App"""
+    try:
+        data = json.loads(event.data)
+        config = load_config()
+        updated = False
+        summary = []
+
+        if data.get("action") == "sync_config":
+            to_add = data.get("add", [])
+            to_remove = data.get("remove", [])
+            
+            # Processa Inclusões
+            added = []
+            for t in to_add:
+                if t not in config["keywords"]:
+                    config["keywords"].append(t)
+                    added.append(t)
+            if added:
+                summary.append(f"✅ Adicionados: {', '.join(added)}")
+                updated = True
+
+            # Processa Remoções
+            removed = []
+            for t in to_remove:
+                if t in config["keywords"]:
+                    config["keywords"].remove(t)
+                    removed.append(t)
+            if removed:
+                summary.append(f"❌ Removidos: {', '.join(removed)}")
+                updated = True
+            
+            if updated:
+                if save_config(config):
+                    msg = "📱 <b>Painel Atualizado:</b>\n\n" + "\n".join(summary)
+                    send_via_bot(msg)
+                    logger.info(f"Sincronização via Mini App concluída: +{added} -{removed}")
+                else:
+                    send_via_bot("❌ Erro ao salvar configurações enviadas pelo Mini App.")
+            else:
+                send_via_bot("ℹ️ Nenhuma alteração real foi necessária.")
+                
+    except Exception as e:
+        logger.error(f"Erro ao processar dados do Mini App: {e}")
+        send_via_bot(f"❌ Erro ao ler dados do painel: {e}")
+
 async def main():
     # Garante instância única
     acquire_lock()
@@ -298,6 +347,12 @@ async def main():
                                 
                     except Exception as e:
                         logger.error(f"Erro no handler: {e}")
+
+                from telethon import types
+                
+                @client.on(events.Raw(types.UpdateBotWebhookData))
+                async def raw_handler(event):
+                    await on_web_app_data(event)
 
                 logger.info(f"Monitorando em canais: {config.get('monitored_channels', [])}")
                 await client.start()
