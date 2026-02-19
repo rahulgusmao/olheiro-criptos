@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Olheiro Cripto - Dashboard</title>
+    <title>Olheiro das Criptos - Dashboard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,6 @@
             overflow-x: hidden;
             padding: 16px;
             padding-bottom: 100px;
-            /* Espaço para o botão do Telegram */
         }
 
         .header {
@@ -52,15 +51,11 @@
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent), #ffab40);
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px var(--accent-glow);
-            font-size: 24px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .title h1 {
@@ -73,7 +68,6 @@
             color: var(--text-dim);
         }
 
-        /* Card Setup */
         .card {
             background-color: var(--card-bg);
             border-radius: 20px;
@@ -93,9 +87,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            justify-content: space-between;
         }
 
-        /* Input Area */
         .actions-grid {
             display: flex;
             flex-direction: column;
@@ -151,7 +145,6 @@
             transform: scale(0.95);
         }
 
-        /* Chips / List */
         .token-container {
             display: flex;
             flex-wrap: wrap;
@@ -169,8 +162,12 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            animation: fadeIn 0.3s ease-out;
-            color: var(--accent);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .chip:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .chip.new {
@@ -187,44 +184,28 @@
 
         .chip-close {
             font-size: 14px;
-            cursor: pointer;
             opacity: 0.5;
+            margin-left: 4px;
         }
 
         .section-info {
             font-size: 0.75rem;
             color: var(--text-dim);
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-dim);
-            font-style: italic;
-            font-size: 0.85rem;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
         }
 
         .badge-count {
             background: var(--accent);
             color: white;
             font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 6px;
-            margin-left: auto;
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-dim);
+            font-style: italic;
         }
     </style>
 </head>
@@ -232,21 +213,21 @@
 <body>
     <div class="header">
         <div class="logo-area">
-            <div class="logo-icon">🔭</div>
+            <img src="olheiro.png" alt="Logo" class="logo-icon">
             <div class="title">
-                <h1>Olheiro Cripto</h1>
-                <p>Gestão de Monitoramento</p>
+                <h1>Olheiro das Criptos</h1>
+                <p>Base de Monitoramento</p>
             </div>
         </div>
     </div>
 
     <!-- CARD AÇÕES -->
     <div class="card">
-        <div class="card-title">⚙️ Ações Rápidas</div>
+        <div class="card-title">⚙️ Gerenciar Tokens</div>
         <div class="actions-grid">
-            <span class="section-info">Digite o token ou palavra para adicionar ou remover da lista:</span>
+            <span class="section-info">Digite o token para adicionar ou remover:</span>
             <div class="input-row">
-                <input type="text" id="tokenInput" placeholder="Ex: BTCUSDT.P ou RSI" autocomplete="off">
+                <input type="text" id="tokenInput" placeholder="Ex: BTCUSDT.P" autocomplete="off">
             </div>
             <div class="input-row" style="margin-top: 5px;">
                 <button class="btn btn-add" style="flex: 1;" onclick="queueAction('add')">➕ INSERIR</button>
@@ -258,12 +239,18 @@
     <!-- CARD LISTA ATUAL -->
     <div class="card">
         <div class="card-title">
-            📋 Em Monitoramento
-            <span id="countBadge" class="badge-count">0</span>
+            <span>📋 Lista Atual</span>
+            <span id="countBadge" class="badge-count">...</span>
         </div>
-        <span class="section-info">As alterações abaixos serão enviadas ao confirmar no botão do Telegram:</span>
-        <div id="tokenGrid" class="token-container">
-            <div class="empty-state">Clique em "Inserir" ou "Remover" para começar...</div>
+
+        <div id="loading">Buscando dados no GitHub...</div>
+        <div id="currentList" class="token-container"></div>
+
+        <!-- Se houver alterações pendentes, mostra aqui -->
+        <div id="pendingSection"
+            style="display:none; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+            <div class="card-title" style="color: var(--accent); font-size: 0.8rem;">📝 Alterações Pendentes</div>
+            <div id="pendingGrid" class="token-container"></div>
         </div>
     </div>
 
@@ -272,17 +259,68 @@
         tg.expand();
         tg.ready();
 
-        tg.MainButton.setText("SALVAR NO MONITORAMENTO");
+        tg.MainButton.setText("CONFIRMAR ALTERAÇÕES");
         tg.MainButton.hide();
 
-        // Lista de operações pendentes
+        let currentTokens = [];
         let pendingChanges = {
             add: [],
             remove: []
         };
 
-        function render() {
-            const grid = document.getElementById('tokenGrid');
+        // Carrega tokens do GitHub
+        window.onload = async function () {
+            try {
+                // Usa timestamp para burlar cache
+                const response = await fetch('monitor_config.json?v=' + new Date().getTime());
+                const data = await response.json();
+
+                const keywords = data.keywords || [];
+                const excluded = (data.excluded_keywords || []).map(k => `🚫 ${k}`);
+
+                currentTokens = [...keywords, ...excluded].sort();
+                renderCurrentList();
+            } catch (e) {
+                document.getElementById('loading').innerText = "Erro ao carregar lista. Verifique internet.";
+                console.error(e);
+            }
+        };
+
+        function renderCurrentList() {
+            const list = document.getElementById('currentList');
+            const loading = document.getElementById('loading');
+            const badge = document.getElementById('countBadge');
+
+            loading.style.display = 'none';
+            list.innerHTML = '';
+
+            if (currentTokens.length === 0) {
+                list.innerHTML = '<div class="section-info" style="width:100%; text-align:center;">Nenhum token monitorado.</div>';
+            }
+
+            currentTokens.forEach(token => {
+                // Se estiver marcado para remover, aplica estilo riscado
+                const isRemoved = pendingChanges.remove.includes(token);
+
+                const chip = document.createElement('div');
+                chip.className = `chip ${isRemoved ? 'removed' : ''}`;
+                chip.innerHTML = `<span>${token}</span>`;
+
+                // Ao clicar num item da lista, preenche o input para facilitar remoção
+                chip.onclick = () => {
+                    let cleanName = token.replace('🚫 ', '');
+                    document.getElementById('tokenInput').value = cleanName;
+                };
+
+                list.appendChild(chip);
+            });
+
+            badge.innerText = currentTokens.length;
+        }
+
+        function renderPending() {
+            const section = document.getElementById('pendingSection');
+            const grid = document.getElementById('pendingGrid');
             grid.innerHTML = '';
 
             const allActions = [
@@ -291,13 +329,14 @@
             ];
 
             if (allActions.length === 0) {
-                grid.innerHTML = '<div class="empty-state">Nenhuma alteração pendente...</div>';
+                section.style.display = 'none';
                 tg.MainButton.hide();
-                document.getElementById('countBadge').innerText = "0";
-                return;
+            } else {
+                section.style.display = 'block';
+                tg.MainButton.show();
             }
 
-            allActions.forEach((item, index) => {
+            allActions.forEach((item) => {
                 const chip = document.createElement('div');
                 chip.className = `chip ${item.type}`;
                 chip.innerHTML = `
@@ -307,43 +346,47 @@
                 grid.appendChild(chip);
             });
 
-            document.getElementById('countBadge').innerText = allActions.length;
-            tg.MainButton.show();
+            // Atualiza a lista principal para refletir riscados
+            renderCurrentList();
         }
 
         function queueAction(type) {
             const input = document.getElementById('tokenInput');
-            const value = input.value.trim().toUpperCase();
+            let value = input.value.trim();
 
             if (!value) return;
 
-            // Evita duplicatas na mesma fila
-            if (type === 'add' && !pendingChanges.add.includes(value)) {
-                // Se estava pra remover, cancela a remoção em vez de adicionar
+            // Se não for comando de exclusão (🚫), padroniza em maiúsculo
+            if (!value.startsWith('🚫') && !value.includes('🔸')) {
+                value = value.toUpperCase();
+            }
+
+            // Lógica para adicionar ou remover da fila
+            if (type === 'add') {
+                // Se já estava na fila de remoção, cancela a remoção
                 if (pendingChanges.remove.includes(value)) {
                     cancelAction('remove', value);
-                } else {
+                } else if (!pendingChanges.add.includes(value) && !currentTokens.includes(value)) {
                     pendingChanges.add.push(value);
                 }
-            } else if (type === 'remove' && !pendingChanges.remove.includes(value)) {
-                // Se estava pra adicionar, cancela a adição em vez de remover
+            } else if (type === 'remove') {
+                // Se já estava na fila de adição, cancela a adição
                 if (pendingChanges.add.includes(value)) {
                     cancelAction('add', value);
-                } else {
+                } else if (!pendingChanges.remove.includes(value) && currentTokens.includes(value)) {
                     pendingChanges.remove.push(value);
                 }
             }
 
             input.value = '';
-            render();
+            renderPending();
             tg.HapticFeedback.impactOccurred('medium');
         }
 
         function cancelAction(type, name) {
-            const list = type === 'new' ? pendingChanges.add : pendingChanges.remove;
             const tKey = type === 'new' ? 'add' : 'remove';
             pendingChanges[tKey] = pendingChanges[tKey].filter(i => i !== name);
-            render();
+            renderPending();
         }
 
         tg.onEvent('mainButtonClicked', function () {
@@ -356,9 +399,10 @@
             tg.close();
         });
 
-        // Cores do tema do Telegram
+        // Cores do tema
         document.documentElement.style.setProperty('--bg-dark', tg.themeParams.bg_color || '#0f1218');
         document.documentElement.style.setProperty('--card-bg', tg.themeParams.secondary_bg_color || '#1a1f29');
+        document.documentElement.style.setProperty('--text', tg.themeParams.text_color || '#ffffff');
     </script>
 </body>
 
