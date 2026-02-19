@@ -11,10 +11,10 @@ jobs:
     timeout-minutes: 350 # Um pouco menos de 6 horas para evitar erro abrupto
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/python-setup-v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -31,5 +31,4 @@ jobs:
           MY_TELEGRAM_ID: ${{ secrets.MY_TELEGRAM_ID }}
           TELEGRAM_SESSION_BASE64: ${{ secrets.TELEGRAM_SESSION_BASE64 }}
         run: |
-          # O script agora vai recriar o arquivo de sessão a partir do Secret
           python telegram_channel_monitor.py
