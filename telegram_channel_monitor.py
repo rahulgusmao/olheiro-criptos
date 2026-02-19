@@ -348,11 +348,23 @@ async def main():
                     except Exception as e:
                         logger.error(f"Erro no handler: {e}")
 
-                from telethon import types
+                from telethon.tl import types
                 
-                @client.on(events.Raw(types.UpdateBotWebhookData))
-                async def raw_handler(event):
-                    await on_web_app_data(event)
+                @client.on(events.NewMessage(action=types.MessageActionWebViewDataSent))
+                async def web_app_handler(event):
+                    try:
+                        # Para UserBot, o dado vem no atributo .text da ação
+                        # Mas o evento NewMessage abstrai isso. Vamos pegar direto da ação.
+                        if event.message.action and hasattr(event.message.action, 'text'):
+                            # Simula a estrutura de evento para reutilizar a função on_web_app_data
+                            # Criamos um objeto simples com atributo .data
+                            class MockEvent:
+                                def __init__(self, data):
+                                    self.data = data
+                            
+                            await on_web_app_data(MockEvent(event.message.action.text))
+                    except Exception as e:
+                        logger.error(f"Erro no web_app_handler: {e}")
 
                 logger.info(f"Monitorando em canais: {config.get('monitored_channels', [])}")
                 await client.start()
