@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-import base64
+from telethon.sessions import StringSession
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -26,25 +26,12 @@ API_HASH = os.getenv("TELEGRAM_API_HASH")
 # Novas variáveis para envio via Bot
 ALERT_BOT_TOKEN = os.getenv("ALERT_BOT_TOKEN")
 MY_TELEGRAM_ID = os.getenv("MY_TELEGRAM_ID")
-SESSION_BASE64 = os.getenv("TELEGRAM_SESSION_BASE64")
+SESSION_STRING = os.getenv("TELEGRAM_SESSION_BASE64")
 
 # Setup paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, "monitor_config.json")
-SESSION_NAME = "monitor_session"
-SESSION_FILE = os.path.join(BASE_DIR, f"{SESSION_NAME}.session")
 LOCK_FILE = os.path.join(BASE_DIR, "monitor_bot.lock")
-
-# Se estiver no GitHub Actions, restaura o arquivo de sessão
-if SESSION_BASE64 and not os.path.exists(SESSION_FILE):
-    try:
-        # Remove espaços e quebras de linha que possam ter vindo do copiar/colar
-        clean_base64 = "".join(SESSION_BASE64.split())
-        with open(SESSION_FILE, "wb") as f:
-            f.write(base64.b64decode(clean_base64))
-        logging.info(f"Sessão restaurada com sucesso em {SESSION_FILE}")
-    except Exception as e:
-        logging.error(f"Erro ao restaurar sessão: {e}")
 
 def acquire_lock():
     """Garante que apenas uma instância do script esteja rodando"""
@@ -247,9 +234,9 @@ async def main():
         while True:
             try:
                 config = load_config()
-                logger.info("Iniciando cliente Telegram (User Bot)...")
-                
-                client = TelegramClient(SESSION_NAME, int(API_ID), API_HASH)
+                # Define a sessão: se houver string (GitHub), usa ela. Se não, usa arquivo local.
+                session = StringSession(SESSION_STRING) if SESSION_STRING else "monitor_session"
+                client = TelegramClient(session, int(API_ID), API_HASH)
                 
                 @client.on(events.NewMessage(chats=config.get("monitored_channels", [])))
                 async def handler(event):
