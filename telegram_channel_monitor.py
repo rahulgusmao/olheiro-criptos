@@ -24,7 +24,8 @@ API_ID = os.getenv("TELEGRAM_API_ID")
 API_HASH = os.getenv("TELEGRAM_API_HASH")
 
 # Novas variáveis para envio via Bot
-ALERT_BOT_TOKEN = os.getenv("ALERT_BOT_TOKEN")
+token_env = os.getenv("ALERT_BOT_TOKEN")
+ALERT_BOT_TOKEN = token_env.strip() if token_env else None
 MY_TELEGRAM_ID = os.getenv("MY_TELEGRAM_ID")
 SESSION_STRING = os.getenv("TELEGRAM_SESSION_BASE64")
 
