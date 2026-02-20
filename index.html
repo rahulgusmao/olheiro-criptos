@@ -259,12 +259,13 @@
         tg.expand();
         tg.ready();
 
-        // SEGURANÇA: Bloqueia acesso se não for você
+        // SEGURANÇA: Bloqueia acesso apenas se o usuário for identificado e for diferente de você.
+        // Se vier em branco (caso do KeyboardButton), permite abertura, pois o Backend tem trava forte de chat_id.
         const user = tg.initDataUnsafe?.user;
         const authorizedUsernames = ['rahulgusmao'];
         const authorizedIds = [672379517]; // Seu ID numérico atualizado
 
-        if (!user || (!authorizedUsernames.includes(user.username) && !authorizedIds.includes(user.id))) {
+        if (user && !authorizedUsernames.includes(user?.username) && !authorizedIds.includes(user?.id)) {
             document.body.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px;">
                     <div style="font-size: 50px; margin-bottom: 20px;">⛔</div>
