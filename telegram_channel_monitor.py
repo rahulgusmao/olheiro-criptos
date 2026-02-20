@@ -110,6 +110,8 @@ def push_to_github():
         status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout
         if "monitor_config.json" in status:
             subprocess.run(["git", "commit", "-m", "🔄 Configuração atualizada via Bot [auto-save]"], check=True)
+            # Tenta evitar conflito trazendo alterações antes do push
+            subprocess.run(["git", "pull", "--rebase"], check=False) 
             subprocess.run(["git", "push"], check=True)
             logger.info("✅ Configuração persistida no GitHub com sucesso!")
         else:
