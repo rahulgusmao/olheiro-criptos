@@ -2,13 +2,13 @@ name: Telegram Olheiro Bot
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # Reinicia a cada 30 minutos
+    - cron: '0 */6 * * *' # Reinicia a cada 6 horas
   workflow_dispatch:      # Permite iniciar manualmente
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 35 # Dá uma margem de segurança de 5 min
+    timeout-minutes: 350 # Um pouco menos de 6 horas para evitar erro abrupto
     permissions:
       contents: write
     steps:
