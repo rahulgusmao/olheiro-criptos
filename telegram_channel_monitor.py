@@ -162,13 +162,61 @@ async def bot_command_handler():
                 for update in updates:
                     last_update_id = update["update_id"]
                     message = update.get("message", {})
-                    text = message.get("text", "")
                     chat_id = message.get("chat", {}).get("id")
 
-                    # Somente aceita comandos do dono configurado
+                    # Somente aceita de quem é o dono
                     if str(chat_id) != str(MY_TELEGRAM_ID):
-                        logger.warning(f"⚠️ Comando recebido de ID não autorizado: {chat_id}. O ID configurado é: {MY_TELEGRAM_ID}")
+                        if chat_id:
+                            logger.warning(f"⚠️ Comando recebido de ID não autorizado: {chat_id}.")
                         continue
+
+                    # ========== MINI APP (web_app_data) ==========
+                    web_app_data = message.get("web_app_data")
+                    if web_app_data:
+                        try:
+                            data = json.loads(web_app_data.get("data", "{}"))
+                            config = load_config()
+                            updated = False
+                            summary = []
+
+                            if data.get("action") == "sync_config":
+                                to_add = data.get("add", [])
+                                to_remove = data.get("remove", [])
+
+                                added = []
+                                for t in to_add:
+                                    if t not in config["keywords"]:
+                                        config["keywords"].append(t)
+                                        added.append(t)
+                                if added:
+                                    summary.append(f"✅ Adicionados: {', '.join(added)}")
+                                    updated = True
+
+                                removed = []
+                                for t in to_remove:
+                                    if t in config["keywords"]:
+                                        config["keywords"].remove(t)
+                                        removed.append(t)
+                                if removed:
+                                    summary.append(f"❌ Removidos: {', '.join(removed)}")
+                                    updated = True
+
+                                if updated:
+                                    if save_config(config):
+                                        msg = "📱 <b>Painel Atualizado:</b>\n\n" + "\n".join(summary)
+                                        send_via_bot(msg)
+                                        logger.info(f"Sincronização via Mini App: +{added} -{removed}")
+                                    else:
+                                        send_via_bot("❌ Erro ao salvar configurações do Mini App.")
+                                else:
+                                    send_via_bot("ℹ️ Nenhuma alteração real foi necessária.")
+                        except Exception as e:
+                            logger.error(f"Erro ao processar dados do Mini App: {e}")
+                            send_via_bot(f"❌ Erro ao ler dados do painel: {e}")
+                        continue
+
+                    # ========== COMANDOS DE TEXTO ==========
+                    text = message.get("text", "")
 
                     if not text.startswith("/"):
                         continue
