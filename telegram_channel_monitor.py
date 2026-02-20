@@ -140,18 +140,14 @@ def push_to_github():
             
             if push_result.returncode == 0:
                 logger.info("✅ Configuração persistida no GitHub com sucesso!")
-                send_via_bot("✅ <b>Git Push OK!</b> Configuração salva no repositório.")
             else:
                 error_msg = push_result.stderr.strip()
                 logger.error(f"❌ Git push falhou: {error_msg}")
-                send_via_bot(f"❌ <b>Git Push FALHOU:</b>\n<code>{error_msg[:500]}</code>")
         else:
             logger.info("ℹ️ Nenhuma alteração pendente na configuração.")
-            send_via_bot("ℹ️ Git: Arquivo remoto já está igual ao local.")
             
     except Exception as e:
         logger.error(f"❌ Falha ao sincronizar com GitHub: {e}")
-        send_via_bot(f"❌ <b>Erro no Git:</b> {e}")
 
 def send_via_bot(text):
     """Envia mensagem usando o Bot de Alerta via HTTP API"""
@@ -210,10 +206,8 @@ async def bot_command_handler():
                             raw_data = web_app_data.get("data", "{}")
                             data = json.loads(raw_data)
                             
-                            # DEBUG 1: Confirma recebimento
                             to_add = data.get("add", [])
                             to_remove = data.get("remove", [])
-                            send_via_bot(f"🔍 <b>Mini App recebido:</b>\n+{len(to_add)} adds, -{len(to_remove)} removes\nGITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS')}")
                             logger.info(f"Mini App dados: add={to_add}, remove={to_remove}")
                             
                             config = load_config()
@@ -245,9 +239,6 @@ async def bot_command_handler():
                                     summary.append(f"❌ Removidos: {', '.join(removed)}")
                                     updated = True
 
-                                if updated:
-                                    # DEBUG 2: Antes de salvar
-                                    send_via_bot(f"💾 Salvando config... ({len(config['keywords'])} keywords)")
                                     if save_config(config):
                                         msg = "📱 <b>Painel Atualizado:</b>\n\n" + "\n".join(summary)
                                         send_via_bot(msg)
