@@ -31,7 +31,6 @@
         "SAHARAUSDT",
         "SNXUSDT",
         "SQDUSDT",
-        "STGUSDT",
         "THETAUSDT",
         "TURBOUSDT",
         "VETUSDT",
@@ -41,7 +40,10 @@
         "ZKPUSDT",
         "Smart Money Level\n🔸🔸🔸",
         "OI 1h",
-        "OI 5m"
+        "OI 5m",
+        "TRXUSDT",
+        "JTOUSDT",
+        "PRICE FORCE LEVEL"
     ],
     "excluded_keywords": [
         "RSI"
