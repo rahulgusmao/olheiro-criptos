@@ -285,6 +285,27 @@ async def bot_command_handler():
                         ex_list = ", ".join(config["excluded_keywords"])
                         response = f"📋 <b>Monitoramento Atual</b>\n\n<b>Keywords:</b>\n{kw_list}\n\n<b>Excluídas:</b>\n{ex_list}"
 
+                    elif cmd == "/painel":
+                        try:
+                            painel_url = f"https://api.telegram.org/bot{ALERT_BOT_TOKEN}/sendMessage"
+                            painel_payload = {
+                                "chat_id": MY_TELEGRAM_ID,
+                                "text": "📱 Toque no botão abaixo para abrir o painel:",
+                                "reply_markup": json.dumps({
+                                    "keyboard": [[{
+                                        "text": "📱 Abrir Painel Olheiro",
+                                        "web_app": {"url": "https://rahulgusmao.github.io/olheiro-criptos/"}
+                                    }]],
+                                    "resize_keyboard": True,
+                                    "one_time_keyboard": True
+                                })
+                            }
+                            requests.post(painel_url, json=painel_payload, timeout=10)
+                            logger.info("📱 Botão do Painel enviado ao usuário.")
+                        except Exception as e:
+                            logger.error(f"Erro ao enviar botão do painel: {e}")
+                        continue
+
                     if response:
                         send_via_bot(response)
 
