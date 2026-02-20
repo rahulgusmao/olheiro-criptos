@@ -107,18 +107,37 @@ def push_to_github():
         subprocess.run(["git", "add", "monitor_config.json"], check=True)
         
         # Verifica se há algo para commitar para evitar erro
-        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True).stdout
+        status_result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+        status = status_result.stdout
+        
         if "monitor_config.json" in status:
-            subprocess.run(["git", "commit", "-m", "🔄 Configuração atualizada via Bot [auto-save]"], check=True)
+            commit_result = subprocess.run(
+                ["git", "commit", "-m", "🔄 Configuração atualizada via Bot [auto-save]"],
+                capture_output=True, text=True
+            )
+            logger.info(f"Commit: {commit_result.stdout.strip()}")
+            
             # Tenta evitar conflito trazendo alterações antes do push
-            subprocess.run(["git", "pull", "--rebase"], check=False) 
-            subprocess.run(["git", "push"], check=True)
-            logger.info("✅ Configuração persistida no GitHub com sucesso!")
+            subprocess.run(["git", "pull", "--rebase"], capture_output=True, check=False)
+            
+            push_result = subprocess.run(
+                ["git", "push"], capture_output=True, text=True
+            )
+            
+            if push_result.returncode == 0:
+                logger.info("✅ Configuração persistida no GitHub com sucesso!")
+                send_via_bot("✅ <b>Git Push OK!</b> Configuração salva no repositório.")
+            else:
+                error_msg = push_result.stderr.strip()
+                logger.error(f"❌ Git push falhou: {error_msg}")
+                send_via_bot(f"❌ <b>Git Push FALHOU:</b>\n<code>{error_msg[:500]}</code>")
         else:
             logger.info("ℹ️ Nenhuma alteração pendente na configuração.")
+            send_via_bot("ℹ️ Git: Nenhuma alteração detectada no arquivo.")
             
     except Exception as e:
         logger.error(f"❌ Falha ao sincronizar com GitHub: {e}")
+        send_via_bot(f"❌ <b>Erro no Git:</b> {e}")
 
 def send_via_bot(text):
     """Envia mensagem usando o Bot de Alerta via HTTP API"""
@@ -174,15 +193,20 @@ async def bot_command_handler():
                     web_app_data = message.get("web_app_data")
                     if web_app_data:
                         try:
-                            data = json.loads(web_app_data.get("data", "{}"))
+                            raw_data = web_app_data.get("data", "{}")
+                            data = json.loads(raw_data)
+                            
+                            # DEBUG 1: Confirma recebimento
+                            to_add = data.get("add", [])
+                            to_remove = data.get("remove", [])
+                            send_via_bot(f"🔍 <b>Mini App recebido:</b>\n+{len(to_add)} adds, -{len(to_remove)} removes\nGITHUB_ACTIONS={os.getenv('GITHUB_ACTIONS')}")
+                            logger.info(f"Mini App dados: add={to_add}, remove={to_remove}")
+                            
                             config = load_config()
                             updated = False
                             summary = []
 
                             if data.get("action") == "sync_config":
-                                to_add = data.get("add", [])
-                                to_remove = data.get("remove", [])
-
                                 added = []
                                 for t in to_add:
                                     if t not in config["keywords"]:
@@ -194,7 +218,6 @@ async def bot_command_handler():
 
                                 removed = []
                                 for raw_t in to_remove:
-                                    # Limpa o emoji se vier do Mini App
                                     t = raw_t.replace("🚫 ", "") if raw_t.startswith("🚫 ") else raw_t
                                     
                                     if t in config["keywords"]:
@@ -209,6 +232,8 @@ async def bot_command_handler():
                                     updated = True
 
                                 if updated:
+                                    # DEBUG 2: Antes de salvar
+                                    send_via_bot(f"💾 Salvando config... ({len(config['keywords'])} keywords)")
                                     if save_config(config):
                                         msg = "📱 <b>Painel Atualizado:</b>\n\n" + "\n".join(summary)
                                         send_via_bot(msg)
@@ -216,7 +241,7 @@ async def bot_command_handler():
                                     else:
                                         send_via_bot("❌ Erro ao salvar configurações do Mini App.")
                                 else:
-                                    send_via_bot("ℹ️ Nenhuma alteração real foi necessária.")
+                                    send_via_bot("ℹ️ Nenhuma alteração real foi necessária (tokens já atualizados).")
                         except Exception as e:
                             logger.error(f"Erro ao processar dados do Mini App: {e}")
                             send_via_bot(f"❌ Erro ao ler dados do painel: {e}")
@@ -287,6 +312,18 @@ async def bot_command_handler():
                         else:
                             response = "⚠️ Uso: /include [PALAVRA]"
                     
+                    elif cmd == "/status":
+                        is_gh = os.getenv("GITHUB_ACTIONS") == "true"
+                        kw_count = len(config["keywords"])
+                        response = (
+                            f"📊 <b>Status do Bot</b>\n\n"
+                            f"🖥️ Ambiente: {'GitHub Actions' if is_gh else 'Local'}\n"
+                            f"📋 Keywords: {kw_count}\n"
+                            f"🚫 Excluídas: {len(config['excluded_keywords'])}\n"
+                            f"📡 Canais: {config.get('monitored_channels', [])}\n"
+                            f"🔑 Session: {'StringSession' if is_gh else 'Local file'}"
+                        )
+
                     elif cmd == "/list":
                         kw_list = ", ".join(config["keywords"])
                         ex_list = ", ".join(config["excluded_keywords"])
