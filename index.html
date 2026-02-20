@@ -390,29 +390,30 @@
 
         function queueAction(type) {
             const input = document.getElementById('tokenInput');
-            let value = input.value.trim();
+            let rawValue = input.value.trim();
 
-            if (!value) return;
+            if (!rawValue) return;
 
-            // Se não for comando de exclusão (🚫), padroniza em maiúsculo
-            if (!value.startsWith('🚫') && !value.includes('🔸')) {
-                value = value.toUpperCase();
-            }
+            // Transforma RSI em 🚫 RSI se for para adicionar como exclusão?
+            // Não, o form de exclusão no painel ainda será implementado. Para remoção, aceita.
+            let value = rawValue;
+            if (value.startsWith('🚫 ')) value = value.replace('🚫 ', '');
+            if (!value.includes('🔸')) value = value.toUpperCase();
 
-            // Lógica para adicionar ou remover da fila
+            // Pega como o token aparece na lista (pode ter 🚫 na frente)
+            let tokenInList = currentTokens.find(t => t === value || t === `🚫 ${value}`) || value;
+
             if (type === 'add') {
-                // Se já estava na fila de remoção, cancela a remoção
-                if (pendingChanges.remove.includes(value)) {
-                    cancelAction('remove', value);
-                } else if (!pendingChanges.add.includes(value) && !currentTokens.includes(value)) {
-                    pendingChanges.add.push(value);
+                if (pendingChanges.remove.includes(tokenInList)) {
+                    cancelAction('remove', tokenInList);
+                } else if (!pendingChanges.add.includes(tokenInList) && !currentTokens.includes(tokenInList)) {
+                    pendingChanges.add.push(tokenInList);
                 }
             } else if (type === 'remove') {
-                // Se já estava na fila de adição, cancela a adição
-                if (pendingChanges.add.includes(value)) {
-                    cancelAction('add', value);
-                } else if (!pendingChanges.remove.includes(value) && currentTokens.includes(value)) {
-                    pendingChanges.remove.push(value);
+                if (pendingChanges.add.includes(tokenInList)) {
+                    cancelAction('add', tokenInList);
+                } else if (!pendingChanges.remove.includes(tokenInList) && currentTokens.includes(tokenInList)) {
+                    pendingChanges.remove.push(tokenInList);
                 }
             }
 
@@ -428,23 +429,24 @@
         }
 
         tg.onEvent('mainButtonClicked', function () {
-            // Salva no Cache Local antes de enviar
+            // Salva no Cache Local
             const currentCache = JSON.parse(localStorage.getItem('pending_actions') || '{"add":[], "remove":[]}');
 
-            // Mescla novas pendências com as antigas
+            // Mescla de forma segura
             const newCache = {
                 add: [...new Set([...currentCache.add, ...pendingChanges.add])],
                 remove: [...new Set([...currentCache.remove, ...pendingChanges.remove])]
             };
 
-            // Limpeza cruzada: se adicionou X e agora removeu X, cancela.
-            // Mas aqui estamos só acumulando intenções para a próxima abertura.
+            // Guarda as pendências totais
             localStorage.setItem('pending_actions', JSON.stringify(newCache));
 
+            // ENVIA PRO ROBÔ TUDO QUE ESTÁ NO CACHE (e não apenas o que a pessoa clicou agora).
+            // Isso conserta tokens "apagados da tela" mas que o robô nunca processou.
             const data = {
                 action: 'sync_config',
-                add: pendingChanges.add,
-                remove: pendingChanges.remove
+                add: newCache.add,
+                remove: newCache.remove
             };
             tg.sendData(JSON.stringify(data));
             tg.close();

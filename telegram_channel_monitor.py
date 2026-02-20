@@ -193,10 +193,17 @@ async def bot_command_handler():
                                     updated = True
 
                                 removed = []
-                                for t in to_remove:
+                                for raw_t in to_remove:
+                                    # Limpa o emoji se vier do Mini App
+                                    t = raw_t.replace("🚫 ", "") if raw_t.startswith("🚫 ") else raw_t
+                                    
                                     if t in config["keywords"]:
                                         config["keywords"].remove(t)
                                         removed.append(t)
+                                    elif t in config["excluded_keywords"]:
+                                        config["excluded_keywords"].remove(t)
+                                        removed.append(f"🚫 {t}")
+                                        
                                 if removed:
                                     summary.append(f"❌ Removidos: {', '.join(removed)}")
                                     updated = True
