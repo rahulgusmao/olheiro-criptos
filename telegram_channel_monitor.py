@@ -95,33 +95,47 @@ def save_config(config):
         return False
 
 def push_to_github():
-    """Faz commit e push do arquivo de configuração para o repositório"""
+    """Faz commit e push do arquivo de configuração para o repositório (anti-conflito)"""
     try:
         logger.info("📤 Sincronizando alterações com o GitHub...")
         
-        # Configura usuário do Git (necessário para o commit)
-        subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=True)
-        subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], check=True)
+        # Lê o conteúdo atual do config (que acabou de ser salvo)
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            config_content = f.read()
         
-        # Adiciona, commit e push
-        subprocess.run(["git", "add", "monitor_config.json"], check=True)
+        # Configura usuário do Git
+        subprocess.run(["git", "config", "user.name", "github-actions[bot]"], 
+                       capture_output=True, check=True)
+        subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], 
+                       capture_output=True, check=True)
         
-        # Verifica se há algo para commitar para evitar erro
+        # ESTRATÉGIA ANTI-CONFLITO:
+        # 1. Busca o estado mais recente do repositório remoto
+        fetch_result = subprocess.run(["git", "fetch", "origin"], capture_output=True, text=True)
+        logger.info(f"Fetch: {fetch_result.returncode}")
+        
+        # 2. Reseta para o estado remoto (descarta qualquer conflito local)
+        reset_result = subprocess.run(["git", "reset", "--hard", "origin/main"], capture_output=True, text=True)
+        logger.info(f"Reset: {reset_result.stdout.strip()}")
+        
+        # 3. Reescreve o arquivo de config com o conteúdo atualizado
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            f.write(config_content)
+        
+        # 4. Verifica se há diferença real
+        subprocess.run(["git", "add", "monitor_config.json"], capture_output=True, check=True)
         status_result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
-        status = status_result.stdout
         
-        if "monitor_config.json" in status:
+        if "monitor_config.json" in status_result.stdout:
+            # 5. Commit e Push
             commit_result = subprocess.run(
                 ["git", "commit", "-m", "🔄 Configuração atualizada via Bot [auto-save]"],
                 capture_output=True, text=True
             )
             logger.info(f"Commit: {commit_result.stdout.strip()}")
             
-            # Tenta evitar conflito trazendo alterações antes do push
-            subprocess.run(["git", "pull", "--rebase"], capture_output=True, check=False)
-            
             push_result = subprocess.run(
-                ["git", "push"], capture_output=True, text=True
+                ["git", "push", "origin", "main"], capture_output=True, text=True
             )
             
             if push_result.returncode == 0:
@@ -133,7 +147,7 @@ def push_to_github():
                 send_via_bot(f"❌ <b>Git Push FALHOU:</b>\n<code>{error_msg[:500]}</code>")
         else:
             logger.info("ℹ️ Nenhuma alteração pendente na configuração.")
-            send_via_bot("ℹ️ Git: Nenhuma alteração detectada no arquivo.")
+            send_via_bot("ℹ️ Git: Arquivo remoto já está igual ao local.")
             
     except Exception as e:
         logger.error(f"❌ Falha ao sincronizar com GitHub: {e}")
