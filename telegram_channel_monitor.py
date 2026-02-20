@@ -314,8 +314,17 @@ async def main():
         while True:
             try:
                 config = load_config()
-                # Define a sessão: se houver string (GitHub), usa ela. Se não, usa arquivo local.
-                session = StringSession(SESSION_STRING) if SESSION_STRING else "monitor_session"
+                # Sessões separadas: GitHub usa StringSession, Local usa arquivo próprio
+                if os.getenv("GITHUB_ACTIONS") == "true":
+                    if not SESSION_STRING:
+                        logger.critical("❌ SESSION_STRING ausente no GitHub Actions!")
+                        return
+                    session = StringSession(SESSION_STRING)
+                    logger.info("🔑 Usando StringSession (GitHub Actions)")
+                else:
+                    session = "monitor_session_local"
+                    logger.info("🔑 Usando sessão local (monitor_session_local)")
+                
                 client = TelegramClient(session, int(API_ID), API_HASH)
                 
                 @client.on(events.NewMessage(chats=config.get("monitored_channels", [])))
