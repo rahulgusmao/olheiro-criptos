@@ -261,13 +261,18 @@
 
         // SEGURANÇA: Bloqueia acesso se não for você
         const user = tg.initDataUnsafe?.user;
-        if (!user || user.username !== 'rahulgusmao') {
+        const authorizedUsernames = ['rahulgusmao'];
+        const authorizedIds = [5577936187]; // Seu ID numérico
+
+        if (!user || (!authorizedUsernames.includes(user.username) && !authorizedIds.includes(user.id))) {
             document.body.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center; padding:20px;">
-                    <h2 style="color:var(--danger)">⛔ ACESSO RESTRITO</h2>
+                    <div style="font-size: 50px; margin-bottom: 20px;">⛔</div>
+                    <h2 style="color:var(--danger)">ACESSO RESTRITO</h2>
                     <p style="color:var(--text-dim); margin-top:10px;">Este painel é de uso exclusivo do administrador.</p>
+                    <p style="font-size: 10px; color: #333; margin-top: 20px;">ID: ${user?.id || '?'}</p>
                 </div>`;
-            setTimeout(() => tg.close(), 3000);
+            setTimeout(() => tg.close(), 5000);
         }
 
         tg.MainButton.setText("CONFIRMAR ALTERAÇÕES");
@@ -279,17 +284,38 @@
             remove: []
         };
 
-        // Carrega tokens do GitHub
+        // Carrega tokens do GitHub e mescla com cache local
         window.onload = async function () {
             try {
-                // Usa timestamp para burlar cache
+                // 1. Busca lista oficial do GitHub
                 const response = await fetch('monitor_config.json?v=' + new Date().getTime());
                 const data = await response.json();
 
-                const keywords = data.keywords || [];
-                const excluded = (data.excluded_keywords || []).map(k => `🚫 ${k}`);
+                let remoteTokens = [...(data.keywords || []), ...(data.excluded_keywords || []).map(k => `🚫 ${k}`)];
 
-                currentTokens = [...keywords, ...excluded].sort();
+                // 2. Busca alterações locais pendentes (Cache Otimista)
+                const localCache = JSON.parse(localStorage.getItem('pending_actions') || '{"add":[], "remove":[]}');
+
+                // 3. Mescla: Aplica local sobre remoto
+                // Se algo estava no cache de adição e já apareceu no remoto, remove do cache (já confirmou)
+                localCache.add = localCache.add.filter(t => !remoteTokens.includes(t));
+                localCache.remove = localCache.remove.filter(t => remoteTokens.includes(t)); // Mantém no cache de remoção se ainda estiver no remoto
+
+                // Atualiza o cache limpo
+                localStorage.setItem('pending_actions', JSON.stringify(localCache));
+
+                // Constroi a lista visual final = (Remoto + LocalAdd) - LocalRemove
+                let finalTokens = [...remoteTokens];
+
+                // Adiciona locais
+                localCache.add.forEach(t => {
+                    if (!finalTokens.includes(t)) finalTokens.push(t);
+                });
+
+                // Remove locais (apenas visualmente, não da lista remoteTokens original se quisermos saber a dif)
+                finalTokens = finalTokens.filter(t => !localCache.remove.includes(t));
+
+                currentTokens = finalTokens.sort();
                 renderCurrentList();
             } catch (e) {
                 document.getElementById('loading').innerText = "Erro ao carregar lista. Verifique internet.";
@@ -310,14 +336,14 @@
             }
 
             currentTokens.forEach(token => {
-                // Se estiver marcado para remover, aplica estilo riscado
-                const isRemoved = pendingChanges.remove.includes(token);
+                // A lista currentTokens já é a "visão futura", então não riscamos nada nela baseada no pendente ATUAL da sessão
+                // Mas se o usuário adicionar algo para remover AGORA, risca.
+                const isRemovedNow = pendingChanges.remove.includes(token);
 
                 const chip = document.createElement('div');
-                chip.className = `chip ${isRemoved ? 'removed' : ''}`;
+                chip.className = `chip ${isRemovedNow ? 'removed' : ''}`;
                 chip.innerHTML = `<span>${token}</span>`;
 
-                // Ao clicar num item da lista, preenche o input para facilitar remoção
                 chip.onclick = () => {
                     let cleanName = token.replace('🚫 ', '');
                     document.getElementById('tokenInput').value = cleanName;
@@ -401,6 +427,19 @@
         }
 
         tg.onEvent('mainButtonClicked', function () {
+            // Salva no Cache Local antes de enviar
+            const currentCache = JSON.parse(localStorage.getItem('pending_actions') || '{"add":[], "remove":[]}');
+
+            // Mescla novas pendências com as antigas
+            const newCache = {
+                add: [...new Set([...currentCache.add, ...pendingChanges.add])],
+                remove: [...new Set([...currentCache.remove, ...pendingChanges.remove])]
+            };
+
+            // Limpeza cruzada: se adicionou X e agora removeu X, cancela.
+            // Mas aqui estamos só acumulando intenções para a próxima abertura.
+            localStorage.setItem('pending_actions', JSON.stringify(newCache));
+
             const data = {
                 action: 'sync_config',
                 add: pendingChanges.add,
